@@ -3,25 +3,47 @@ from copy import deepcopy
 
 
 class Field:
-    def __init__(self, x_size, y_size):
+    def __init__(self, y_size: int, x_size: int):
         self.x_size = x_size
         self.y_size = y_size
         self.current_frame = [[0 for x in range(x_size)] for y in range(y_size)]
         self.__stable_frame = [[0 for x in range(x_size)] for y in range(y_size)]
 
-    def __is_collision(self, fig: Figure) -> bool:
+    def try_to_move_horizontally(self, fig: Figure, shift: int):
+        possible_position_x: int = fig.current_pos[0] + shift
+        # right border collision
+        if possible_position_x + fig.x_size > self.x_size:
+            return
+
+        # left border collision
+        if possible_position_x < 0:
+            return
+
+        #for i in range(fig.x_size):
+        #    for j in range(fig.y_size):
+        #        if fig.area[j][i] == 1:  # check only active cells
+        #            y_pos = j + fig.current_pos[1]
+        #            x_pos = i + possible_position_x
+        #            if self.current_frame[y_pos][x_pos] == 1:
+        #                return
+
+        fig.current_pos[0] += shift
+
+    def __is_intersection_with_bottom(self, fig: Figure) -> bool:
+        # bottom collision
         if fig.current_pos[1] + fig.y_size > self.y_size:
             return True
-        return False
 
-    def __is_intersection_with_borders(self, fig: Figure) -> bool:
-        for i in range(fig.x_size):
-            if fig.area[fig.y_size-1][i] == 1:
-                if self.current_frame[fig.y_size-1 + fig.current_pos[1]][i + fig.current_pos[0]] == 1:
-                    return True
+        #for i in range(fig.x_size):
+        #    for j in range(fig.y_size):
+        #        if fig.area[j][i] == 1:
+        #            x_pos = i + fig.current_pos[0]
+        #            y_pos = j + fig.current_pos[1]
+        #            if self.current_frame[y_pos][x_pos] == 1:
+        #                return True
 
     def overlay(self, fig: Figure) -> bool:
-        if self.__is_collision(fig) or self.__is_intersection_with_borders(fig):
+        if self.__is_intersection_with_bottom(fig):
             self.delete_rows_if_necessary()
             self.__stable_frame = deepcopy(self.current_frame)
             return True
@@ -30,7 +52,9 @@ class Field:
         for i in range(fig.x_size):
             for j in range(fig.y_size):
                 if fig.area[j][i] == 1:
-                    new_field[j + fig.current_pos[1]][i + fig.current_pos[0]] = fig.area[j][i]
+                    x_pos = i + fig.current_pos[0]
+                    y_pos = j + fig.current_pos[1]
+                    new_field[y_pos][x_pos] = fig.area[j][i]
         self.current_frame = deepcopy(new_field)
         return False
 
