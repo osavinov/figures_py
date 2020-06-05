@@ -69,6 +69,21 @@ class Field:
 
         return is_bottom_intersection, redraw_rotation
 
+    def try_to_rotate_figure(self, figure: Figure) -> bool:
+        cur_figure_id: int = figure.id
+        next_figure_id: int = get_id_next_figure(cur_figure_id)
+
+        if next_figure_id == cur_figure_id:
+            return False
+
+        logger.debug(f"Trying to transform ({cur_figure_id})->({next_figure_id})")
+        figure.transform(next_figure_id)
+        if self.__has_field_collision(figure) or self.__prev_figures_collision(figure):
+            logger.debug(f"Keep figure ({cur_figure_id})")
+            figure.transform(cur_figure_id)  # return prev figure
+            return False
+        return True
+
     def __is_intersection_with_bottom(self, fig: Figure, possible_position_y: int) -> bool:
         # bottom collision
         if possible_position_y + fig.y_size > self.y_size:
@@ -105,24 +120,7 @@ class Field:
 
         return False
 
-    def try_to_rotate_figure(self, figure: Figure) -> bool:
-        cur_figure_id: int = figure.id
-        next_figure_id: int = get_id_next_figure(cur_figure_id)
-
-        if next_figure_id == cur_figure_id:
-            return False
-
-        logger.debug(f"Trying to transform ({cur_figure_id})->({next_figure_id})")
-        figure.transform(next_figure_id)
-        if self.__has_field_collision(figure) or self.__prev_figures_collision(figure):
-            logger.debug(f"Keep figure ({cur_figure_id})")
-            figure.transform(cur_figure_id)  # return prev figure
-            return False
-        return True
-
-    def overlay(self, fig: Figure, just_rotated: bool) -> Tuple[bool, int]:
-        logger.debug(fig)
-        is_bottom_intersection, redraw_rotation = self.try_to_move_vertically(fig, 1, just_rotated)
+    def overlay(self, fig: Figure, is_bottom_intersection: bool, redraw_rotation: bool) -> Tuple[bool, int]:
         if is_bottom_intersection:
             if redraw_rotation:
                 logger.debug("Need to redraw current_frame due to rotation!")
