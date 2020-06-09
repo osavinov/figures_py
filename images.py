@@ -58,6 +58,7 @@ class PointImage:
             self.fading_phase += 1
             return True
         self.activated = False
+        self.fading_phase = 0
         return False
 
 

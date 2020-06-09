@@ -11,14 +11,16 @@ from images import Background, Particle, PointImage, ClockFace, ClockFrame
 
 logger = logging.getLogger(__name__)
 
+speed_levels: list = [200, 150, 100, 50, 25, 10]
+
 
 class GameLevel:
     def __init__(self):
         pg.init()
         self.screen = pg.display.set_mode((640, 480))
         pg.display.set_caption("CRINGEtris v.0.1")
-        self.field_v_size = 20
-        self.field_h_size = 15
+        self.field_v_size: int = 20
+        self.field_h_size: int = 10
 
         self.background_images: Background = Background("bottle")
         self.points_clock_face: ClockFace = ClockFace("digits")
@@ -32,8 +34,11 @@ class GameLevel:
         self.field = Field(self.field_v_size, self.field_h_size)
         self.figures_factory = FiguresFactory(self.field.x_size)
 
-        self.move_counter = 0
+        self.move_counter: int = 0
+        self.frame_counter: int = 0
+        self.level: int = 1
 
+    # returns False if it's possible to stop updating
     def update_field(self) -> bool:
         self.move_counter += 1
         logger.debug(f"------- move_counter={self.move_counter}")
@@ -42,8 +47,10 @@ class GameLevel:
         stop_moving_current_figure: bool = False  # current_figure have to stop due to field collision
         just_rotated: bool = False  # flag for force redrawing the field during success rotation attempt
         while not stop_moving_current_figure:
+            self.frame_counter += 1
             for event in pg.event.get():
                 if event.type == pg.QUIT:
+                    logger.debug("Exit game!")
                     return False
                 elif event.type == pg.KEYDOWN:
                     if event.key == pg.K_LEFT:
@@ -67,13 +74,20 @@ class GameLevel:
                 self.points_clock_face.add_points(points)
                 self.get_point.activated = True
                 self.clock_images_representation = self.points_clock_face.get_digits_representation()
+                self.level = self.points_clock_face.points_int // 10
 
             self.draw_field()
 
-            if not stop_moving_current_figure:
-                pg.time.wait(100)
+            if self.level == len(speed_levels)-1:
+                return False
+
+            pg.time.wait(speed_levels[self.level])
+
+            #if not stop_moving_current_figure:
+            #    pg.time.wait(100)
 
             if stop_moving_current_figure and figure_moves_counter == 0 and self.field.is_almost_filled():
+                logger.debug("Field is almost filled: exit game!")
                 return False
             figure_moves_counter += 1
             logger.debug(f"figure={current_figure}, figure_moves_counter={figure_moves_counter}")
