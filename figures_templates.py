@@ -35,7 +35,7 @@ def get_id_next_figure(current_fig_id: int) -> int:
     return -1
 
 
-possible_figures_templates: List = [
+possible_figures_templates: List[List[List[int]]] = [
     [
         [0, 1],
         [1, 1],

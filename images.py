@@ -1,10 +1,8 @@
 import logging
 import os
-from os import listdir
-from os.path import isfile, join
-
 import pygame as pg
 from typing import Union, List, Dict, Tuple
+from settings import DATA_FOLDER, SCREEN_RESOLUTION
 
 logger = logging.getLogger(__name__)
 
@@ -12,19 +10,19 @@ main_dir: Union[str, bytes] = os.path.split(os.path.abspath(__file__))[0]
 
 
 def load_image(name):
-    path = os.path.join(main_dir, "data", name)
+    path = os.path.join(main_dir, DATA_FOLDER, name)
     return pg.image.load(path).convert()
 
 
 class ClockFace:
     def __init__(self, digits_dir: str):
         self.points_int: int = 0
-        digits_path = os.path.join(main_dir, "data", digits_dir)
-        digits_files = [os.path.join(digits_path, file) for file in listdir(digits_path) if isfile(join(digits_path,
-                                                                                                        file))]
-        digits_images: List = [pg.image.load(file).convert_alpha() for file in digits_files]
+        digits_path = os.path.join(main_dir, DATA_FOLDER, digits_dir)
+        digits_files = sorted([os.path.join(digits_path, file) for file in os.listdir(digits_path)
+                               if os.path.isfile(os.path.join(digits_path, file))])
+        digits_images: List[pg.Surface] = [pg.image.load(file).convert_alpha() for file in digits_files]
         self.digits: Dict = dict(zip([x for x in range(10)], digits_images))
-        logger.debug(f"digits collection: {self.digits}")
+        logger.debug('digits collection: %s', self.digits)
 
     def add_points(self, points: int):
         self.points_int += points
@@ -70,17 +68,18 @@ class Particle:
 
 class ClockFrame:
     def __init__(self, filename):
-        path = os.path.join(main_dir, "data", filename)
+        path = os.path.join(main_dir, DATA_FOLDER, filename)
         self.image = pg.transform.scale(pg.image.load(path).convert(), (200, 130))
         self.position = (440, 290)
 
 
 class Background:
     def __init__(self, background_dir):
-        background_path = os.path.join(main_dir, "data", background_dir)
-        background_files = [os.path.join(background_path, file) for file in listdir(background_path)
-                            if isfile(join(background_path, file))]
-        self.images: List = [pg.transform.scale(pg.image.load(file).convert(), (640, 400)) for file in background_files]
+        background_path = os.path.join(main_dir, DATA_FOLDER, background_dir)
+        background_files = sorted([os.path.join(background_path, file) for file in os.listdir(background_path)
+                                   if os.path.isfile(os.path.join(background_path, file))])
+        self.images: List = [pg.transform.scale(pg.image.load(file).convert(), SCREEN_RESOLUTION)
+                             for file in background_files]
         self.counter: int = -1
 
     def __iter__(self):
