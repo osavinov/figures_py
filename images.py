@@ -75,11 +75,15 @@ class ClockFrame:
 
 class Background:
     def __init__(self, background_dir):
-        background_path = os.path.join(main_dir, DATA_FOLDER, background_dir)
-        background_files = sorted([os.path.join(background_path, file) for file in os.listdir(background_path)
-                                   if os.path.isfile(os.path.join(background_path, file))])
-        self.images: List = [pg.transform.scale(pg.image.load(file).convert(), SCREEN_RESOLUTION)
-                             for file in background_files]
+        self.images: List = []
+        background_path: str = os.path.join(main_dir, DATA_FOLDER, background_dir)
+        images_files_len: int = len([file for file in os.listdir(background_path)
+                                     if os.path.isfile(os.path.join(background_path, file))])
+
+        for i in range(images_files_len):
+            file: str = os.path.join(background_path, f'background-{i}.png')
+            self.images.append(pg.transform.scale(pg.image.load(file).convert(), SCREEN_RESOLUTION))
+
         self.counter: int = -1
         self.frame_counter: int = 0
 

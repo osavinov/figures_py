@@ -6,7 +6,8 @@ from field import Field
 from figure import Figure
 from figuresfactory import FiguresFactory
 from images import Background, Particle, PointImage, ClockFace, ClockFrame
-from settings import SCREEN_RESOLUTION, WINDOWS_CAPTION, SPEED_LEVELS, MENU_FONT_NAME, MENU_FONT_SIZE
+from settings import SCREEN_RESOLUTION, WINDOWS_CAPTION, SPEED_LEVELS, MENU_FONT_SIZE, \
+    SPEED_LABEL_FONT_SIZE
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +21,13 @@ class GameLevel:
         )
         pygame.display.set_caption(WINDOWS_CAPTION)
         pygame.font.init()
-        self.menu_font: pygame.font.Font = pygame.font.SysFont(
-            name=MENU_FONT_NAME,
-            size=MENU_FONT_SIZE,
+        self.menu_font: pygame.font.Font = pygame.font.Font(
+            None,
+            MENU_FONT_SIZE,
+        )
+        self.speed_label_font: pygame.font.Font = pygame.font.Font(
+            None,
+            SPEED_LABEL_FONT_SIZE,
         )
         self.clock: pygame.time.Clock = pygame.time.Clock()
 
@@ -42,9 +47,12 @@ class GameLevel:
 
         self.move_counter: int = 0
         self.frame_counter: int = 0
-        self.level: int = 1
+        self.speed_level: int = 1
 
         self.pause: bool = False
+        self.move_figure_down_immediately: bool = False
+        self.figure_just_rotated: bool = False  # flag for force redrawing the field during success rotation attempt
+        self.need_to_quit: bool = False
 
     # returns False if it's possible to stop updating
     def update_field(self) -> bool:
@@ -53,56 +61,29 @@ class GameLevel:
         current_figure: Figure = self.figures_factory.get_figure()
         figure_moves_counter: int = 0
         stop_moving_current_figure: bool = False  # current_figure have to stop due to field collision
-        just_rotated: bool = False  # flag for force redrawing the field during success rotation attempt
-        move_immediately: bool = False
+        self.figure_just_rotated = False
+        self.move_figure_down_immediately = False
 
         while not stop_moving_current_figure:
-            # self.clock.tick(60)
-            # process events queue
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    logger.debug('Exit game!')
-                    return False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        # special event pause
-                        logger.debug('PRESSED BUTTON K_ESC')
-                        if self.pause:
-                            self.pause = False
-                            logger.debug('Pause mode was disabled')
-                        else:
-                            self.pause = True
-                            logger.debug('Pause mode was enabled')
-                    elif not self.pause:
-                        if event.key == pygame.K_LEFT:
-                            logger.debug('PRESSED BUTTON K_LEFT')
-                            self.field.try_to_move_horizontally(current_figure, -1)
-                        elif event.key == pygame.K_RIGHT:
-                            logger.debug('PRESSED BUTTON K_RIGHT')
-                            self.field.try_to_move_horizontally(current_figure, 1)
-                        elif event.key == pygame.K_SPACE:
-                            logger.debug('PRESSED BUTTON K_SPACE')
-                            just_rotated = self.field.try_to_rotate_figure(current_figure)
-                            logger.debug('after_rotate_attempt: %s', current_figure)
-                        elif event.key == pygame.K_DOWN:
-                            logger.debug('PRESSED BUTTON K_DOWN')
-                            move_immediately = True
+            self.process_events_queue(current_figure)
+            if self.need_to_quit:
+                return False
+
             if self.pause:
                 self.draw_pause_menu_screen()
             else:
                 self.frame_counter += 1
 
-                if self.frame_counter < SPEED_LEVELS[self.level] and not move_immediately:
+                if self.frame_counter < SPEED_LEVELS[self.speed_level-1] and not self.move_figure_down_immediately:
                     pygame.time.wait(1)
                 else:
                     self.frame_counter = 0
                     logger.debug('Scene update...')
                     stop_moving_current_figure = self.render_current_figure_movement(
                         current_figure,
-                        just_rotated,
                     )
 
-                    if self.level == len(SPEED_LEVELS)-1:
+                    if self.speed_level == len(SPEED_LEVELS)-1:
                         logger.debug('Player was reached the highest speed level!')
                         return False
 
@@ -114,11 +95,45 @@ class GameLevel:
                 self.draw_field()
         return True
 
-    def render_current_figure_movement(self, current_figure, just_rotated):
+    def process_events_queue(self, current_figure: Figure):
+        # process events queue
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                logger.debug('Exit game!')
+                self.need_to_quit = True
+            elif event.type == pygame.KEYDOWN:
+                self.process_keydown(event, current_figure)
+
+    def process_keydown(self, event: pygame.event.Event, current_figure: Figure):
+        if event.key == pygame.K_ESCAPE:
+            # special event pause
+            logger.debug('PRESSED BUTTON K_ESC')
+            if self.pause:
+                self.pause = False
+                logger.debug('Pause mode was disabled')
+            else:
+                self.pause = True
+                logger.debug('Pause mode was enabled')
+        elif not self.pause:
+            if event.key == pygame.K_LEFT:
+                logger.debug('PRESSED BUTTON K_LEFT')
+                self.field.try_to_move_horizontally(current_figure, -1)
+            elif event.key == pygame.K_RIGHT:
+                logger.debug('PRESSED BUTTON K_RIGHT')
+                self.field.try_to_move_horizontally(current_figure, 1)
+            elif event.key == pygame.K_SPACE:
+                logger.debug('PRESSED BUTTON K_SPACE')
+                self.figure_just_rotated = self.field.try_to_rotate_figure(current_figure)
+                logger.debug('after_rotate_attempt: %s', current_figure)
+            elif event.key == pygame.K_DOWN:
+                logger.debug('PRESSED BUTTON K_DOWN')
+                self.move_figure_down_immediately = True
+
+    def render_current_figure_movement(self, current_figure) -> bool:
         is_bottom_intersection, redraw_rotation = self.field.try_to_move_vertically(
             figure=current_figure,
             shift=1,
-            just_rotated=just_rotated,
+            just_rotated=self.figure_just_rotated,
         )
         stop_moving_current_figure, points = self.field.overlay(
             figure=current_figure,
@@ -130,7 +145,8 @@ class GameLevel:
             self.points_clock_face.add_points(points)
             self.get_point.activated = True
             self.clock_images_representation = self.points_clock_face.get_digits_representation()
-            self.level = self.points_clock_face.points_int // 10
+            if self.points_clock_face.points_int >= 10:
+                self.speed_level = self.points_clock_face.points_int // 10 + 1
         return stop_moving_current_figure
 
     def draw_field(self):
@@ -196,6 +212,18 @@ class GameLevel:
                 dest=digit_record[1],
             )
 
+        # draw speed label
+        speed_label: pygame.Surface = self.speed_label_font.render(
+            f'Скорость: {self.speed_level}',
+            True,
+            (0, 0, 0),
+            (255, 255, 255),
+        )
+        self.screen.blit(
+            source=speed_label,
+            dest=(470, 50),
+        )
+
         pygame.display.update()
         logger.debug('+++++++++++++++++++++++++++++++++++++++')
 
@@ -204,9 +232,10 @@ class GameLevel:
             'ПОСОСИТЕ ГОВНА',
             False,
             (0, 0, 0),
+            (255, 255, 255),
         )
         self.screen.blit(
             source=menu_caption,
-            dest=(0, 0),
+            dest=(30, 200),
         )
         pygame.display.update()
