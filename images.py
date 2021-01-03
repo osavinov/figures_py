@@ -41,10 +41,10 @@ class ClockFace:
 
 
 class PointImage:
-    def __init__(self, filename):
+    def __init__(self, filename, fading_length: int = 100):
         self.image = load_image(filename)
         self.position = (420, 50)  # (x, y)
-        self.max_fading_length = 5
+        self.max_fading_length = fading_length
         self.fading_phase = 0
         self.activated = False
 
@@ -81,12 +81,16 @@ class Background:
         self.images: List = [pg.transform.scale(pg.image.load(file).convert(), SCREEN_RESOLUTION)
                              for file in background_files]
         self.counter: int = -1
+        self.frame_counter: int = 0
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        self.counter += 1
-        if self.counter == len(self.images):
-            self.counter = 0
+        self.frame_counter += 1
+        if self.frame_counter == 10:
+            self.frame_counter = 0
+            self.counter += 1
+            if self.counter == len(self.images):
+                self.counter = 0
         return self.images[self.counter]

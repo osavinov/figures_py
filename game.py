@@ -26,6 +26,7 @@ class GameLevel:
             name=MENU_FONT_NAME,
             size=MENU_FONT_SIZE,
         )
+        self.clock: pygame.time.Clock = pygame.time.Clock()
 
         self.field_v_size: int = 20
         self.field_h_size: int = 10
@@ -55,10 +56,10 @@ class GameLevel:
         figure_moves_counter = 0
         stop_moving_current_figure: bool = False  # current_figure have to stop due to field collision
         just_rotated: bool = False  # flag for force redrawing the field during success rotation attempt
+        move_immediately = False
 
         while not stop_moving_current_figure:
-            self.frame_counter += 1
-
+            # self.clock.tick(60)
             # process events queue
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -85,27 +86,34 @@ class GameLevel:
                             logger.debug('PRESSED BUTTON K_SPACE')
                             just_rotated = self.field.try_to_rotate_figure(current_figure)
                             logger.debug('after_rotate_attempt: %s', current_figure)
+                        elif event.key == pygame.K_DOWN:
+                            logger.debug('PRESSED BUTTON K_DOWN')
+                            move_immediately = True
             if self.pause:
                 self.draw_pause_menu_screen()
             else:
-                stop_moving_current_figure = self.render_current_figure_movement(
-                    current_figure,
-                    just_rotated,
-                )
+                self.frame_counter += 1
 
+                if self.frame_counter < SPEED_LEVELS[self.level] and not move_immediately:
+                    pygame.time.wait(1)
+                else:
+                    self.frame_counter = 0
+                    logger.debug('Scene update...')
+                    stop_moving_current_figure = self.render_current_figure_movement(
+                        current_figure,
+                        just_rotated,
+                    )
+
+                    if self.level == len(SPEED_LEVELS)-1:
+                        logger.debug('Player was reached the highest speed level!')
+                        return False
+
+                    if stop_moving_current_figure and figure_moves_counter == 0 and self.field.is_almost_filled():
+                        logger.debug('Field is almost filled: exit game!')
+                        return False
+                    figure_moves_counter += 1
+                    logger.debug('figure=%s, figure_moves_counter=%d', current_figure, figure_moves_counter)
                 self.draw_field()
-
-                if self.level == len(SPEED_LEVELS)-1:
-                    logger.debug('Player was reached the highest speed level!')
-                    return False
-
-                pygame.time.wait(SPEED_LEVELS[self.level])
-
-                if stop_moving_current_figure and figure_moves_counter == 0 and self.field.is_almost_filled():
-                    logger.debug('Field is almost filled: exit game!')
-                    return False
-                figure_moves_counter += 1
-                logger.debug('figure=%s, figure_moves_counter=%d', current_figure, figure_moves_counter)
         return True
 
     def render_current_figure_movement(self, current_figure, just_rotated):
@@ -130,6 +138,8 @@ class GameLevel:
     def draw_field(self):
         cell_x_size: int = 20
         cell_y_size: int = 20
+        border_width: int = 5
+
         logger.debug('=' * (len(self.field.current_frame[0]) + 2))
         for line in self.field.current_frame:
             logger.debug('|' + (''.join([str(x) for x in line])).replace('0', ' ').replace('1', '#') + '|')
@@ -137,20 +147,37 @@ class GameLevel:
 
         # draw background
         background_image = next(self.background_images)
-        self.screen.blit(background_image, (0, 0))
+        self.screen.blit(source=background_image, dest=(0, 0))
+
+        # draw the field borders
+        pygame.draw.line(
+            surface=self.screen,
+            color=(0, 0, 0),
+            start_pos=(0, 400+border_width),
+            end_pos=(200, 400+border_width),
+            width=border_width,
+        )
+
+        pygame.draw.line(
+            surface=self.screen,
+            color=(0, 0, 0),
+            start_pos=(200+border_width, 0),
+            end_pos=(200+border_width, 400+border_width),
+            width=border_width,
+        )
 
         # draw the field
         for row_num in range(self.field_v_size):
             for elem_num in range(self.field_h_size):
                 if self.field.current_frame[row_num][elem_num] == 1:
-                    self.screen.blit(self.particle.image, (cell_y_size * elem_num, cell_x_size * row_num))
+                    self.screen.blit(source=self.particle.image, dest=(cell_y_size * elem_num, cell_x_size * row_num))
 
         if self.get_point.need_to_draw():  # draw image for new points get
-            self.screen.blit(self.get_point.image, self.get_point.position)
+            self.screen.blit(source=self.get_point.image, dest=self.get_point.position)
 
-        self.screen.blit(self.clock_frame.image, self.clock_frame.position)  # draw clocks frame
+        self.screen.blit(source=self.clock_frame.image, dest=self.clock_frame.position)  # draw clocks frame
         for digit_record in self.clock_images_representation:  # draw digits into frame
-            self.screen.blit(digit_record[0], digit_record[1])
+            self.screen.blit(source=digit_record[0], dest=digit_record[1])
 
         pygame.display.update()
         logger.debug('+++++++++++++++++++++++++++++++++++++++')
@@ -170,13 +197,13 @@ def main():
     logs_dir: str = os.path.join(root_dir, 'logs')
     if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
-    log_filename = datetime.utcnow().isoformat().replace('-', '').replace(':', '')[:15]
+    log_filename: str = datetime.utcnow().isoformat().replace('-', '').replace(':', '')[:15]
     logging.basicConfig(
         filename=os.path.join(logs_dir, f'{log_filename}.log'),
         level=logging.DEBUG,
         format='%(asctime)s - %(levelname)s - %(filename)s.%(funcName)s: %(message)s',
     )
-    game = GameLevel()
+    game: GameLevel = GameLevel()
     while game.update_field():
         pass
 
