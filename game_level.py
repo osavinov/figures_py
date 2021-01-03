@@ -1,7 +1,5 @@
 import logging
-import os
 import pygame
-from datetime import datetime
 from typing import Tuple, List
 
 from field import Field
@@ -53,10 +51,10 @@ class GameLevel:
         self.move_counter += 1
         logger.debug('------- move_counter=%d', self.move_counter)
         current_figure: Figure = self.figures_factory.get_figure()
-        figure_moves_counter = 0
+        figure_moves_counter: int = 0
         stop_moving_current_figure: bool = False  # current_figure have to stop due to field collision
         just_rotated: bool = False  # flag for force redrawing the field during success rotation attempt
-        move_immediately = False
+        move_immediately: bool = False
 
         while not stop_moving_current_figure:
             # self.clock.tick(60)
@@ -147,7 +145,10 @@ class GameLevel:
 
         # draw background
         background_image = next(self.background_images)
-        self.screen.blit(source=background_image, dest=(0, 0))
+        self.screen.blit(
+            source=background_image,
+            dest=(0, 0),
+        )
 
         # draw the field borders
         pygame.draw.line(
@@ -170,14 +171,30 @@ class GameLevel:
         for row_num in range(self.field_v_size):
             for elem_num in range(self.field_h_size):
                 if self.field.current_frame[row_num][elem_num] == 1:
-                    self.screen.blit(source=self.particle.image, dest=(cell_y_size * elem_num, cell_x_size * row_num))
+                    self.screen.blit(
+                        source=self.particle.image,
+                        dest=(cell_y_size * elem_num, cell_x_size * row_num),
+                    )
 
-        if self.get_point.need_to_draw():  # draw image for new points get
-            self.screen.blit(source=self.get_point.image, dest=self.get_point.position)
+        # draw image for new points get
+        if self.get_point.need_to_draw():
+            self.screen.blit(
+                source=self.get_point.image,
+                dest=self.get_point.position,
+            )
 
-        self.screen.blit(source=self.clock_frame.image, dest=self.clock_frame.position)  # draw clocks frame
-        for digit_record in self.clock_images_representation:  # draw digits into frame
-            self.screen.blit(source=digit_record[0], dest=digit_record[1])
+        # draw clocks frame
+        self.screen.blit(
+            source=self.clock_frame.image,
+            dest=self.clock_frame.position,
+        )
+
+        # draw digits into frame
+        for digit_record in self.clock_images_representation:
+            self.screen.blit(
+                source=digit_record[0],
+                dest=digit_record[1],
+            )
 
         pygame.display.update()
         logger.debug('+++++++++++++++++++++++++++++++++++++++')
@@ -188,25 +205,8 @@ class GameLevel:
             False,
             (0, 0, 0),
         )
-        self.screen.blit(menu_caption, (0, 0))
+        self.screen.blit(
+            source=menu_caption,
+            dest=(0, 0),
+        )
         pygame.display.update()
-
-
-def main():
-    root_dir: str = os.path.split(os.path.abspath(__file__))[0]
-    logs_dir: str = os.path.join(root_dir, 'logs')
-    if not os.path.exists(logs_dir):
-        os.makedirs(logs_dir)
-    log_filename: str = datetime.utcnow().isoformat().replace('-', '').replace(':', '')[:15]
-    logging.basicConfig(
-        filename=os.path.join(logs_dir, f'{log_filename}.log'),
-        level=logging.DEBUG,
-        format='%(asctime)s - %(levelname)s - %(filename)s.%(funcName)s: %(message)s',
-    )
-    game: GameLevel = GameLevel()
-    while game.update_field():
-        pass
-
-
-if __name__ == '__main__':
-    main()

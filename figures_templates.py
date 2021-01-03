@@ -6,11 +6,11 @@ class Sequence:
         self._values: Tuple = values
         self._index: int = -1
 
-    def present(self, value: int):
-        return value in self._values
+    def __contains__(self, item: int) -> bool:
+        return item in self._values
 
     def next_elem(self, value: int) -> Optional[int]:
-        if not self.present(value):
+        if value not in self._values:
             return None
         for i in range(len(self._values)):
             if self._values[i] == value:
@@ -30,7 +30,7 @@ figures_sequences: List[Sequence] = [
 
 def get_id_next_figure(current_fig_id: int) -> int:
     for seq in figures_sequences:
-        if seq.present(current_fig_id):
+        if current_fig_id in seq:
             return seq.next_elem(current_fig_id)
     return -1
 
@@ -39,59 +39,59 @@ possible_figures_templates: List[List[List[int]]] = [
     [
         [0, 1],
         [1, 1],
-        [1, 0]
+        [1, 0],
     ],
     [
         [1, 1, 0],
-        [0, 1, 1]
+        [0, 1, 1],
     ],
     [
         [1, 0],
         [1, 0],
-        [1, 1]
+        [1, 1],
     ],
     [
         [1, 1, 1],
-        [1, 0, 0]
+        [1, 0, 0],
     ],
     [
         [1, 1],
         [0, 1],
-        [0, 1]
+        [0, 1],
     ],
     [
         [0, 0, 1],
-        [1, 1, 1]
+        [1, 1, 1],
     ],
     [
         [1, 1],
-        [1, 1]
+        [1, 1],
     ],
     [
         [0, 1, 0],
-        [1, 1, 1]
+        [1, 1, 1],
     ],
     [
         [1, 0],
         [1, 1],
-        [1, 0]
+        [1, 0],
     ],
     [
         [1, 1, 1],
-        [0, 1, 0]
+        [0, 1, 0],
     ],
     [
         [0, 1],
         [1, 1],
-        [0, 1]
+        [0, 1],
     ],
     [
-        [1, 1, 1, 1]
+        [1, 1, 1, 1],
     ],
     [
         [1],
         [1],
         [1],
-        [1]
-    ]
+        [1],
+    ],
 ]
