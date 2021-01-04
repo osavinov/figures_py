@@ -29,6 +29,10 @@ class GameLevel:
             None,
             SPEED_LABEL_FONT_SIZE,
         )
+        self.start_screen_font: pygame.font.Font = pygame.font.Font(
+            None,
+            48,
+        )
         self.clock: pygame.time.Clock = pygame.time.Clock()
 
         self.field_v_size: int = 20
@@ -53,6 +57,7 @@ class GameLevel:
         self.move_figure_down_immediately: bool = False
         self.figure_just_rotated: bool = False  # flag for force redrawing the field during success rotation attempt
         self.need_to_quit: bool = False
+        self.start_screen_active: bool = True
 
     # returns False if it's possible to stop updating
     def update_field(self) -> bool:
@@ -68,6 +73,10 @@ class GameLevel:
             self.clock.tick(MAX_FPS)
             self.process_events_queue(current_figure)
 
+            if self.start_screen_active:
+                self.draw_start_screen()
+                continue
+
             if self.need_to_quit:
                 return False
 
@@ -75,9 +84,8 @@ class GameLevel:
                 self.draw_pause_menu_screen()
                 continue
 
-            self.frame_counter += 1
-
             if self.frame_counter < SPEED_LEVELS[self.speed_level-1] and not self.move_figure_down_immediately:
+                self.frame_counter += 1
                 self.draw_field()
                 continue
 
@@ -110,6 +118,9 @@ class GameLevel:
                 self.process_keydown(event, current_figure)
 
     def process_keydown(self, event: pygame.event.Event, current_figure: Figure):
+        if self.start_screen_active:
+            self.start_screen_active = False
+            return
         if event.key == pygame.K_ESCAPE:
             # special event pause
             logger.debug('PRESSED BUTTON K_ESC')
@@ -218,29 +229,48 @@ class GameLevel:
             )
 
         # draw speed label
-        speed_label: pygame.Surface = self.speed_label_font.render(
-            f'Скорость: {self.speed_level}',
-            True,
-            (0, 0, 0),
-            (255, 255, 255),
-        )
-        self.screen.blit(
-            source=speed_label,
-            dest=(470, 50),
+        self.__draw_custom_label(
+            label_text=f'Скорость: {self.speed_level}',
+            font=self.speed_label_font,
+            label_position=(470, 50),
+            update_display=False,
         )
 
         pygame.display.update()
         logger.debug('+++++++++++++++++++++++++++++++++++++++')
 
     def draw_pause_menu_screen(self):
-        menu_caption: pygame.Surface = self.menu_font.render(
+        self.__draw_custom_label(
             'ПОСОСИТЕ ГОВНА',
-            False,
-            (0, 0, 0),
-            (255, 255, 255),
+            self.menu_font,
+            (30, 200),
+        )
+
+    def draw_start_screen(self):
+        self.__draw_custom_label(
+            'Жмякни по клавише, браток',
+            self.start_screen_font,
+            (70, 200),
+        )
+
+    def __draw_custom_label(
+            self,
+            label_text: str,
+            font: pygame.font.Font,
+            label_position: Tuple[int, int],
+            text_color: Tuple = (0, 0, 0),
+            background_color: Tuple = (255, 255, 255),
+            update_display: bool = True,
+    ):
+        custom_label: pygame.Surface = font.render(
+            label_text,
+            True,
+            text_color,
+            background_color,
         )
         self.screen.blit(
-            source=menu_caption,
-            dest=(30, 200),
+            source=custom_label,
+            dest=label_position,
         )
-        pygame.display.update()
+        if update_display:
+            pygame.display.update()
