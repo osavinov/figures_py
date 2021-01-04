@@ -2,6 +2,7 @@ import logging
 import os
 import datetime
 from game_level import GameLevel
+from settings import LOG_LEVEL
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ def main():
     log_filename: str = datetime.datetime.utcnow().isoformat().replace('-', '').replace(':', '')[:15]
     logging.basicConfig(
         filename=os.path.join(logs_dir, f'{log_filename}.log'),
-        level=logging.DEBUG,
+        level=getattr(logging, LOG_LEVEL),
         format='%(asctime)s - %(levelname)s - %(filename)s.%(funcName)s: %(message)s',
     )
     game: GameLevel = GameLevel()

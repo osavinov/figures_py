@@ -92,7 +92,7 @@ class Background:
 
     def __next__(self):
         self.frame_counter += 1
-        if self.frame_counter == 10:
+        if self.frame_counter == 5:
             self.frame_counter = 0
             self.counter += 1
             if self.counter == len(self.images):

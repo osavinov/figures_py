@@ -7,7 +7,7 @@ from figure import Figure
 from figuresfactory import FiguresFactory
 from images import Background, Particle, PointImage, ClockFace, ClockFrame
 from settings import SCREEN_RESOLUTION, WINDOWS_CAPTION, SPEED_LEVELS, MENU_FONT_SIZE, \
-    SPEED_LABEL_FONT_SIZE
+    SPEED_LABEL_FONT_SIZE, MAX_FPS
 
 logger = logging.getLogger(__name__)
 
@@ -65,34 +65,39 @@ class GameLevel:
         self.move_figure_down_immediately = False
 
         while not stop_moving_current_figure:
+            self.clock.tick(MAX_FPS)
             self.process_events_queue(current_figure)
+
             if self.need_to_quit:
                 return False
 
             if self.pause:
                 self.draw_pause_menu_screen()
-            else:
-                self.frame_counter += 1
+                continue
 
-                if self.frame_counter < SPEED_LEVELS[self.speed_level-1] and not self.move_figure_down_immediately:
-                    pygame.time.wait(1)
-                else:
-                    self.frame_counter = 0
-                    logger.debug('Scene update...')
-                    stop_moving_current_figure = self.render_current_figure_movement(
-                        current_figure,
-                    )
+            self.frame_counter += 1
 
-                    if self.speed_level == len(SPEED_LEVELS)-1:
-                        logger.debug('Player was reached the highest speed level!')
-                        return False
-
-                    if stop_moving_current_figure and figure_moves_counter == 0 and self.field.is_almost_filled():
-                        logger.debug('Field is almost filled: exit game!')
-                        return False
-                    figure_moves_counter += 1
-                    logger.debug('figure=%s, figure_moves_counter=%d', current_figure, figure_moves_counter)
+            if self.frame_counter < SPEED_LEVELS[self.speed_level-1] and not self.move_figure_down_immediately:
                 self.draw_field()
+                continue
+
+            self.frame_counter = 0
+            logger.debug('Scene update...')
+            stop_moving_current_figure = self.render_current_figure_movement(
+                current_figure,
+            )
+
+            if self.speed_level == len(SPEED_LEVELS)-1:
+                logger.debug('Player was reached the highest speed level!')
+                return False
+
+            if stop_moving_current_figure and figure_moves_counter == 0 and self.field.is_almost_filled():
+                logger.debug('Field is almost filled: exit game!')
+                return False
+
+            figure_moves_counter += 1
+            logger.debug('figure=%s, figure_moves_counter=%d', current_figure, figure_moves_counter)
+            self.draw_field()
         return True
 
     def process_events_queue(self, current_figure: Figure):
