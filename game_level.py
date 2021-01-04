@@ -73,12 +73,12 @@ class GameLevel:
             self.clock.tick(MAX_FPS)
             self.process_events_queue(current_figure)
 
+            if self.need_to_quit:
+                return False
+
             if self.start_screen_active:
                 self.draw_start_screen()
                 continue
-
-            if self.need_to_quit:
-                return False
 
             if self.pause:
                 self.draw_pause_menu_screen()
