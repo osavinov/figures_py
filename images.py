@@ -30,6 +30,9 @@ class ClockFace:
     def reset_points(self):
         self.points_int = 0
 
+    def get_points(self) -> int:
+        return self.points_int
+
     def get_digits_representation(self) -> List[Tuple]:
         representation: List = [self.digits[int(c)] for c in str(self.points_int)]
 
