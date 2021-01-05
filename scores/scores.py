@@ -1,7 +1,7 @@
 import csv
 import os
-from abc import abstractmethod, ABC
-from typing import List, IO, Tuple
+from abc import abstractmethod
+from typing import List, Tuple, IO
 
 
 class ScoresTable:
@@ -15,7 +15,7 @@ class ScoresTable:
         return self.__scores
 
 
-class Reader:
+class AbstractReader:
     @abstractmethod
     def read(self) -> ScoresTable:
         pass
@@ -25,7 +25,7 @@ class Reader:
         pass
 
 
-class CSVReader(Reader):
+class CSVReader(AbstractReader):
     def __init__(self, root_dir: str):
         self.scores_filename: str = os.path.join(root_dir, 'scores.dat')
         self.scores_file = None
@@ -58,7 +58,7 @@ class CSVReader(Reader):
             csv_writer.writerow(row)
 
 
-class GoogleSheetsReader(Reader, ABC):
+class GoogleSheetsReader(AbstractReader):
     def read(self) -> ScoresTable:
         pass
 
@@ -67,7 +67,7 @@ class GoogleSheetsReader(Reader, ABC):
 
 
 class Scores:
-    def __init__(self, reader: Reader):
+    def __init__(self, reader: AbstractReader):
         self.reader = reader
         self.scores_table: ScoresTable = self.reader.read()
 

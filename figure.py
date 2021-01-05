@@ -17,7 +17,8 @@ class Figure:
         self.current_pos = [random.randint(0, target_field_width - self.x_size), -1]  # [x, y] starts from y=-1
 
     def __str__(self):
-        return f'(id={self.id}, x_size={self.x_size}, y_size={self.y_size}, current_pos={self.current_pos}, area={self.area})'
+        return f'(id={self.id}, x_size={self.x_size}, y_size={self.y_size}, ' \
+               f'current_pos={self.current_pos}, area={self.area})'
 
     def transform(self, figure_id: int):
         new_template: List[List[int]] = possible_figures_templates[figure_id]

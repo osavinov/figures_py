@@ -5,7 +5,9 @@ from typing import Tuple, List
 from field import Field
 from figure import Figure
 from figuresfactory import FiguresFactory
-from images import Background, Particle, PointImage, ClockFace, ClockFrame
+from images.background import Background
+from images.clock import ClockFace, ClockFrame
+from images.particles import Particle, PointImage
 from settings import SCREEN_RESOLUTION, WINDOWS_CAPTION, SPEED_LEVELS, MENU_FONT_SIZE, \
     SPEED_LABEL_FONT_SIZE, MAX_FPS
 
@@ -96,7 +98,7 @@ class GameLevel:
             )
 
             if self.speed_level == len(SPEED_LEVELS)-1:
-                logger.debug('Player was reached the highest speed level!')
+                logger.debug('Player was reached the highest speed level! Exit game!')
                 return False
 
             if stop_moving_current_figure and figure_moves_counter == 0 and self.field.is_almost_filled():

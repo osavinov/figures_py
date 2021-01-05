@@ -56,7 +56,7 @@ def process_image(source_path: str, dest_folder: str):
 
 
 def main():
-    process_image(os.path.join(main_dir, "data", "background.gif"), os.path.join(main_dir, "data", "bottle"))
+    process_image(os.path.join(main_dir, "../data", "background.gif"), os.path.join(main_dir, "../data", "bottle"))
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ import datetime
 import getpass
 
 from game_level import GameLevel
-from scores import Scores, CSVReader
+from scores.scores import CSVReader, Scores
 from settings import LOG_LEVEL
 
 logger = logging.getLogger(__name__)

@@ -1,3 +1,5 @@
+import os
+
 SCREEN_RESOLUTION = (640, 480)
 WINDOWS_CAPTION = 'CRINGEtris v.0.1'
 SPEED_LEVELS = [15, 10, 7, 5, 3, 1]
@@ -7,3 +9,4 @@ MENU_FONT_SIZE = 90
 SPEED_LABEL_FONT_SIZE = 36
 MAX_FPS = 60
 LOG_LEVEL = 'ERROR'
+MAIN_DIR = os.path.split(os.path.abspath(__file__))[0]
