@@ -1,6 +1,7 @@
 import pytest
 import pygame
-from images import ClockFace
+
+from images.clock import ClockFace
 from settings import SCREEN_RESOLUTION
 from typing import List, Tuple
 

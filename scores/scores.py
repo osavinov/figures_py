@@ -56,6 +56,7 @@ class CSVReader(AbstractReader):
         csv_writer = csv.writer(self.scores_file, delimiter=',')
         for row in scores_table.get_scores():
             csv_writer.writerow(row)
+        self.scores_file.close()
 
 
 class GoogleSheetsReader(AbstractReader):
