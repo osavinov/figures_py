@@ -4,7 +4,7 @@ import datetime
 import getpass
 
 from game_level import GameLevel
-from scores.scores import CSVReader, Scores
+from scores.scores import CSVReader, Scores, GoogleSheetsReader
 from settings import LOG_LEVEL
 
 logger = logging.getLogger(__name__)
@@ -24,8 +24,10 @@ def main():
 
     current_user: str = getpass.getuser()
 
-    csv_reader: CSVReader = CSVReader(root_dir)
-    scores: Scores = Scores(csv_reader)
+    #csv_reader: CSVReader = CSVReader(root_dir)
+    #scores: Scores = Scores(csv_reader)
+    google_sheet_reader: GoogleSheetsReader = GoogleSheetsReader()
+    scores: Scores = Scores(google_sheet_reader)
     game: GameLevel = GameLevel()
     while game.update_field():
         pass
