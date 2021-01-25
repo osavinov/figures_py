@@ -28,38 +28,37 @@ def get_access(spreadsheet_id: str = None):
 
 def create_sheet() -> str:
     service = get_service()
-    spreadsheet = service.spreadsheets().create(
-        body={
-            'properties': {
-                'title': 'scores',
-                'locale': 'en_US',
+    spreadsheet = (
+        service.spreadsheets()
+        .create(
+            body={
+                'properties': {'title': 'scores', 'locale': 'en_US'},
+                'sheets': [
+                    {
+                        'properties': {
+                            'sheetType': 'GRID',
+                            'sheetId': 1,
+                            'title': 'score',
+                            'gridProperties': {
+                                'rowCount': 9999,
+                                'columnCount': 3,
+                            },
+                        },
+                    },
+                ],
             },
-            'sheets': [
-                {
-                    'properties': {
-                        'sheetType': 'GRID',
-                        'sheetId': 1,
-                        'title': 'score',
-                        'gridProperties': {
-                            'rowCount': 9999,
-                            'columnCount': 3,
-                        }
-                    }
-                }
-            ]
-        }
-    ).execute()
+        )
+        .execute()
+    )
     return spreadsheet['spreadsheetId']
 
 
 def get_service():
-    credentials = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, SCOPES)
-    http_auth = credentials.authorize(httplib2.Http())
-    return apiclient.discovery.build(
-        'sheets',
-        'v4',
-        http=http_auth,
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(
+        CREDENTIALS_FILE, SCOPES,
     )
+    http_auth = credentials.authorize(httplib2.Http())
+    return apiclient.discovery.build('sheets', 'v4', http=http_auth)
 
 
 def main():

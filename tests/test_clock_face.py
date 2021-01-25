@@ -25,29 +25,14 @@ def setup_pygame():
 @pytest.mark.parametrize(
     'add_points,expected_representation',
     [
-        pytest.param(
-            None,
-            [
-                (anything, (460, 305)),
-            ],
-            id='init_empty',
-        ),
-        pytest.param(
-            1,
-            [
-                (anything, (460, 305)),
-            ],
-            id='add_one_point',
-        ),
+        pytest.param(None, [(anything, (460, 305))], id='init_empty'),
+        pytest.param(1, [(anything, (460, 305))], id='add_one_point'),
         pytest.param(
             10,
-            [
-                (anything, (460, 305)),
-                (anything, (520, 305)),
-            ],
+            [(anything, (460, 305)), (anything, (520, 305))],
             id='add_ten_points',
         ),
-    ]
+    ],
 )
 def test_clock_face(setup_pygame, add_points, expected_representation):
     clock_face = ClockFace('digits')
@@ -58,6 +43,8 @@ def test_clock_face(setup_pygame, add_points, expected_representation):
 
     if add_points:
         clock_face.add_points(add_points)
-        lock_images_representation: List[Tuple] = clock_face.get_digits_representation()
+        lock_images_representation: List[
+            Tuple
+        ] = clock_face.get_digits_representation()
         assert clock_face.points_int == add_points
         assert lock_images_representation == expected_representation

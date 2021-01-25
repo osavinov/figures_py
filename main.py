@@ -15,7 +15,9 @@ def main():
     logs_dir: str = os.path.join(root_dir, 'logs')
     if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
-    log_filename: str = datetime.datetime.utcnow().isoformat().replace('-', '').replace(':', '')[:15]
+    log_filename: str = datetime.datetime.utcnow().isoformat().replace(
+        '-', '',
+    ).replace(':', '')[:15]
     logging.basicConfig(
         filename=os.path.join(logs_dir, f'{log_filename}.log'),
         level=getattr(logging, LOG_LEVEL),
@@ -24,8 +26,8 @@ def main():
 
     current_user: str = getpass.getuser()
 
-    #csv_reader: CSVReader = CSVReader(root_dir)
-    #scores: Scores = Scores(csv_reader)
+    # csv_reader: CSVReader = CSVReader(root_dir)
+    # scores: Scores = Scores(csv_reader)
     google_sheet_reader: GoogleSheetsReader = GoogleSheetsReader()
     scores: Scores = Scores(google_sheet_reader)
     game: GameLevel = GameLevel()

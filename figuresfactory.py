@@ -9,7 +9,7 @@ class FiguresFactory:
         self.target_field_width = target_field_width
 
     def get_figure(self) -> Figure:
-        figure_id: int = random.randint(0, len(possible_figures_templates)-1)
+        figure_id: int = random.randint(0, len(possible_figures_templates) - 1)
         template = possible_figures_templates[figure_id]
         return Figure(
             template=template,

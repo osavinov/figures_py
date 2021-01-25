@@ -8,8 +8,14 @@ from figuresfactory import FiguresFactory
 from images.background import Background
 from images.clock import ClockFace, ClockFrame
 from images.particles import Particle, PointImage
-from settings import SCREEN_RESOLUTION, WINDOWS_CAPTION, SPEED_LEVELS, MENU_FONT_SIZE, \
-    SPEED_LABEL_FONT_SIZE, MAX_FPS
+from settings import (
+    SCREEN_RESOLUTION,
+    WINDOWS_CAPTION,
+    SPEED_LEVELS,
+    MENU_FONT_SIZE,
+    SPEED_LABEL_FONT_SIZE,
+    MAX_FPS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,24 +30,21 @@ class GameLevel:
         pygame.display.set_caption(WINDOWS_CAPTION)
         pygame.font.init()
         self.menu_font: pygame.font.Font = pygame.font.Font(
-            None,
-            MENU_FONT_SIZE,
+            None, MENU_FONT_SIZE,
         )
         self.speed_label_font: pygame.font.Font = pygame.font.Font(
-            None,
-            SPEED_LABEL_FONT_SIZE,
+            None, SPEED_LABEL_FONT_SIZE,
         )
-        self.start_screen_font: pygame.font.Font = pygame.font.Font(
-            None,
-            48,
-        )
+        self.start_screen_font: pygame.font.Font = pygame.font.Font(None, 48)
         self.clock: pygame.time.Clock = pygame.time.Clock()
 
         self.field_v_size: int = 20
         self.field_h_size: int = 10
         self.background_images: Background = Background('bottle')
         self.points_clock_face: ClockFace = ClockFace('digits')
-        self.clock_images_representation: List[Tuple] = self.points_clock_face.get_digits_representation()
+        self.clock_images_representation: List[
+            Tuple
+        ] = self.points_clock_face.get_digits_representation()
         self.clock_frame: ClockFrame = ClockFrame('frame.png')
         self.particle: Particle = Particle('obstacle.bmp')
         self.get_point: PointImage = PointImage('point.png')
@@ -86,7 +89,10 @@ class GameLevel:
                 self.draw_pause_menu_screen()
                 continue
 
-            if self.frame_counter < SPEED_LEVELS[self.speed_level-1] and not self.move_figure_down_immediately:
+            if (
+                    self.frame_counter < SPEED_LEVELS[self.speed_level - 1]
+                    and not self.move_figure_down_immediately
+            ):
                 self.frame_counter += 1
                 self.draw_field()
                 continue
@@ -97,16 +103,26 @@ class GameLevel:
                 current_figure,
             )
 
-            if self.speed_level == len(SPEED_LEVELS)-1:
-                logger.debug('Player was reached the highest speed level! Exit game!')
+            if self.speed_level == len(SPEED_LEVELS) - 1:
+                logger.debug(
+                    'Player was reached the highest speed level! Exit game!',
+                )
                 return False
 
-            if stop_moving_current_figure and figure_moves_counter == 0 and self.field.is_almost_filled():
+            if (
+                    stop_moving_current_figure
+                    and figure_moves_counter == 0
+                    and self.field.is_almost_filled()
+            ):
                 logger.debug('Field is almost filled: exit game!')
                 return False
 
             figure_moves_counter += 1
-            logger.debug('figure=%s, figure_moves_counter=%d', current_figure, figure_moves_counter)
+            logger.debug(
+                'figure=%s, figure_moves_counter=%d',
+                current_figure,
+                figure_moves_counter,
+            )
             self.draw_field()
         return True
 
@@ -119,7 +135,9 @@ class GameLevel:
             elif event.type == pygame.KEYDOWN:
                 self.process_keydown(event, current_figure)
 
-    def process_keydown(self, event: pygame.event.Event, current_figure: Figure):
+    def process_keydown(
+            self, event: pygame.event.Event, current_figure: Figure,
+    ):
         if self.start_screen_active:
             self.start_screen_active = False
             return
@@ -141,17 +159,21 @@ class GameLevel:
                 self.field.try_to_move_horizontally(current_figure, 1)
             elif event.key == pygame.K_SPACE:
                 logger.debug('PRESSED BUTTON K_SPACE')
-                self.figure_just_rotated = self.field.try_to_rotate_figure(current_figure)
+                self.figure_just_rotated = self.field.try_to_rotate_figure(
+                    current_figure,
+                )
                 logger.debug('after_rotate_attempt: %s', current_figure)
             elif event.key == pygame.K_DOWN:
                 logger.debug('PRESSED BUTTON K_DOWN')
                 self.move_figure_down_immediately = True
 
     def render_current_figure_movement(self, current_figure) -> bool:
-        is_bottom_intersection, redraw_rotation = self.field.try_to_move_vertically(
-            figure=current_figure,
-            shift=1,
-            just_rotated=self.figure_just_rotated,
+        is_bottom_intersection, redraw_rotation = (
+            self.field.try_to_move_vertically(
+                figure=current_figure,
+                shift=1,
+                just_rotated=self.figure_just_rotated,
+            )
         )
         stop_moving_current_figure, points = self.field.overlay(
             figure=current_figure,
@@ -162,7 +184,9 @@ class GameLevel:
             logger.debug('Getting new game points!')
             self.points_clock_face.add_points(points)
             self.get_point.activated = True
-            self.clock_images_representation = self.points_clock_face.get_digits_representation()
+            self.clock_images_representation = (
+                self.points_clock_face.get_digits_representation()
+            )
             if self.points_clock_face.points_int >= 10:
                 self.speed_level = self.points_clock_face.points_int // 10 + 1
         return stop_moving_current_figure
@@ -174,30 +198,33 @@ class GameLevel:
 
         logger.debug('=' * (len(self.field.current_frame[0]) + 2))
         for line in self.field.current_frame:
-            logger.debug('|' + (''.join([str(x) for x in line])).replace('0', ' ').replace('1', '#') + '|')
+            logger.debug(
+                '|'
+                + (''.join([str(x) for x in line]))
+                .replace('0', ' ')
+                .replace('1', '#')
+                + '|',
+            )
         logger.debug('=' * (len(self.field.current_frame[0]) + 2))
 
         # draw background
         background_image = next(self.background_images)
-        self.screen.blit(
-            source=background_image,
-            dest=(0, 0),
-        )
+        self.screen.blit(source=background_image, dest=(0, 0))
 
         # draw the field borders
         pygame.draw.line(
             surface=self.screen,
             color=(0, 0, 0),
-            start_pos=(0, 400+border_width),
-            end_pos=(200, 400+border_width),
+            start_pos=(0, 400 + border_width),
+            end_pos=(200, 400 + border_width),
             width=border_width,
         )
 
         pygame.draw.line(
             surface=self.screen,
             color=(0, 0, 0),
-            start_pos=(200+border_width, 0),
-            end_pos=(200+border_width, 400+border_width),
+            start_pos=(200 + border_width, 0),
+            end_pos=(200 + border_width, 400 + border_width),
             width=border_width,
         )
 
@@ -213,22 +240,17 @@ class GameLevel:
         # draw image for new points get
         if self.get_point.need_to_draw():
             self.screen.blit(
-                source=self.get_point.image,
-                dest=self.get_point.position,
+                source=self.get_point.image, dest=self.get_point.position,
             )
 
         # draw clocks frame
         self.screen.blit(
-            source=self.clock_frame.image,
-            dest=self.clock_frame.position,
+            source=self.clock_frame.image, dest=self.clock_frame.position,
         )
 
         # draw digits into frame
         for digit_record in self.clock_images_representation:
-            self.screen.blit(
-                source=digit_record[0],
-                dest=digit_record[1],
-            )
+            self.screen.blit(source=digit_record[0], dest=digit_record[1])
 
         # draw speed label
         self.__draw_custom_label(
@@ -242,17 +264,11 @@ class GameLevel:
         logger.debug('+++++++++++++++++++++++++++++++++++++++')
 
     def draw_pause_menu_screen(self):
-        self.__draw_custom_label(
-            'ПОСОСИТЕ ГОВНА',
-            self.menu_font,
-            (30, 200),
-        )
+        self.__draw_custom_label('ПОСОСИТЕ ГОВНА', self.menu_font, (30, 200))
 
     def draw_start_screen(self):
         self.__draw_custom_label(
-            'Жмякни по клавише, браток',
-            self.start_screen_font,
-            (70, 200),
+            'Жмякни по клавише, браток', self.start_screen_font, (70, 200),
         )
 
     def __draw_custom_label(
@@ -265,14 +281,8 @@ class GameLevel:
             update_display: bool = True,
     ):
         custom_label: pygame.Surface = font.render(
-            label_text,
-            True,
-            text_color,
-            background_color,
+            label_text, True, text_color, background_color,
         )
-        self.screen.blit(
-            source=custom_label,
-            dest=label_position,
-        )
+        self.screen.blit(source=custom_label, dest=label_position)
         if update_display:
             pygame.display.update()
