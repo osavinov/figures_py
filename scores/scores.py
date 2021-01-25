@@ -1,4 +1,5 @@
 import csv
+import logging
 import os
 from abc import abstractmethod
 from typing import List, Tuple, IO
@@ -14,6 +15,8 @@ SCOPES = [
 
 CREDENTIALS_FILE = 'credentials.json'
 SPREADSHEET_ID = '19TJRdBdZvyJeD1HkNU1Xx5qZnDUq0US1nMDKmsQQeG0'
+
+logger = logging.getLogger(__name__)
 
 
 class ScoresTable:
@@ -76,21 +79,29 @@ class CSVReader(AbstractReader):
 
 class GoogleSheetsReader(AbstractReader):
     def __init__(self):
+        self.available = True
         credentials = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, SCOPES)
         http_auth = credentials.authorize(httplib2.Http())
-        self.service = apiclient.discovery.build(
-            'sheets',
-            'v4',
-            http=http_auth,
-        )
+        try:
+            self.service = apiclient.discovery.build(
+                'sheets',
+                'v4',
+                http=http_auth,
+            )
+        except httplib2.ServerNotFoundError:
+            logger.error('Unable to connect to Google Sheets server!')
+            self.available = False
 
     def read(self) -> ScoresTable:
+        scores_table: ScoresTable = ScoresTable()
+        if not self.available:
+            return scores_table
+
         results = self.service.spreadsheets().values().batchGet(
             spreadsheetId=SPREADSHEET_ID,
             ranges='score!A1:C9999',
         ).execute()
         sheet_content: List[List] = results['valueRanges'][0]['values']
-        scores_table: ScoresTable = ScoresTable()
         for row in sheet_content:
             scores_table.add_record(
                 points=row[0],
@@ -100,6 +111,8 @@ class GoogleSheetsReader(AbstractReader):
         return scores_table
 
     def rewrite(self, scores_table: ScoresTable):
+        if not self.available:
+            return
         range_sheet: str = f'score!A1:C{len(scores_table)}'
         self.service.spreadsheets().values().batchUpdate(
             spreadsheetId=SPREADSHEET_ID,
