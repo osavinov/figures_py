@@ -30,15 +30,10 @@ def main():
     # scores: Scores = Scores(csv_reader)
     google_sheet_reader: GoogleSheetsReader = GoogleSheetsReader()
     scores: Scores = Scores(google_sheet_reader)
-    game: GameLevel = GameLevel(current_user=current_user)
+    game: GameLevel = GameLevel(current_user=current_user, scores=scores)
     while game.update_field():
         pass
 
-    scores.update(
-        score=game.points_clock_face.get_points(),
-        username=current_user,
-        timestamp=datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-    )
     scores.rewrite()
 
 

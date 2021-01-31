@@ -1,4 +1,6 @@
 import logging
+from datetime import datetime
+
 import pygame
 from typing import Tuple, List
 
@@ -8,12 +10,14 @@ from figuresfactory import FiguresFactory
 from images.background import Background
 from images.clock import ClockFace, ClockFrame
 from images.particles import Particle, PointImage
+from scores.scores import Scores
 from settings import (
     SCREEN_RESOLUTION,
     WINDOWS_CAPTION,
     SPEED_LEVELS,
     MENU_FONT_SIZE,
     SPEED_LABEL_FONT_SIZE,
+    SCORES_LABEL_FONT_SIZE,
     MAX_FPS,
 )
 
@@ -21,7 +25,10 @@ logger = logging.getLogger(__name__)
 
 
 class GameLevel:
-    def __init__(self, current_user: str):
+    def __init__(self, current_user: str, scores: Scores):
+
+        self.scores: Scores = scores
+
         # init pygame parameters
         pygame.init()
         self.screen: pygame.Surface = pygame.display.set_mode(
@@ -34,6 +41,9 @@ class GameLevel:
         )
         self.speed_label_font: pygame.font.Font = pygame.font.Font(
             None, SPEED_LABEL_FONT_SIZE,
+        )
+        self.scores_label_font: pygame.font.Font = pygame.font.Font(
+            None, SCORES_LABEL_FONT_SIZE,
         )
         self.start_screen_font: pygame.font.Font = pygame.font.Font(None, 48)
         self.clock: pygame.time.Clock = pygame.time.Clock()
@@ -64,7 +74,8 @@ class GameLevel:
         self.need_to_quit: bool = False
         self.start_screen_active: bool = True
 
-        self.current_user = current_user
+        self.current_user: str = current_user
+        self.show_best_scores: bool = False
 
     # returns False if it's possible to stop updating
     def update_field(self) -> bool:
@@ -82,6 +93,15 @@ class GameLevel:
 
             if self.need_to_quit:
                 return False
+
+            if self.show_best_scores:
+                self.scores.update(
+                    score=self.points_clock_face.get_points(),
+                    username=self.current_user,
+                    timestamp=datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
+                )
+                self.draw_show_best_scores()
+                continue
 
             if self.start_screen_active:
                 self.draw_start_screen()
@@ -109,7 +129,8 @@ class GameLevel:
                 logger.debug(
                     'Player was reached the highest speed level! Exit game!',
                 )
-                return False
+                self.show_best_scores = True
+                continue
 
             if (
                     stop_moving_current_figure
@@ -117,7 +138,8 @@ class GameLevel:
                     and self.field.is_almost_filled()
             ):
                 logger.debug('Field is almost filled: exit game!')
-                return False
+                self.show_best_scores = True
+                continue
 
             figure_moves_counter += 1
             logger.debug(
@@ -152,6 +174,9 @@ class GameLevel:
             else:
                 self.pause = True
                 logger.debug('Pause mode was enabled')
+            if self.show_best_scores:
+                self.need_to_quit = True
+                logger.debug('End game')
         elif not self.pause:
             if event.key == pygame.K_LEFT:
                 logger.debug('PRESSED BUTTON K_LEFT')
@@ -280,6 +305,30 @@ class GameLevel:
         self.__draw_custom_label(
             'Жмякни по клавише, браток', self.start_screen_font, (70, 200),
         )
+
+    def draw_show_best_scores(self):
+        sorted_scores = sorted(
+            self.scores.scores_table.get_scores(),
+            key=lambda x: int(x[0]),
+            reverse=True,
+        )
+        max_range: int = 5
+        pos_y: int = 40
+        if len(sorted_scores) < 5:
+            max_range = len(sorted_scores)
+
+        self.__draw_custom_label(
+            'Топ братков', self.scores_label_font, (170, pos_y),
+        )
+        pos_y += 40
+        for i in range(max_range):
+            record = sorted_scores[i]
+            self.__draw_custom_label(
+                label_text=f'{i+1}) {record[0]}, {record[1]}',
+                font=self.scores_label_font,
+                label_position=(150, pos_y),
+            )
+            pos_y += 35
 
     def __draw_custom_label(
             self,

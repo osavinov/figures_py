@@ -7,6 +7,7 @@ DATA_FOLDER = 'data'
 MENU_FONT_NAME = 'Arial'
 MENU_FONT_SIZE = 90
 SPEED_LABEL_FONT_SIZE = 36
+SCORES_LABEL_FONT_SIZE = 48
 MAX_FPS = 60
 LOG_LEVEL = 'DEBUG'
 MAIN_DIR = os.path.split(os.path.abspath(__file__))[0]
