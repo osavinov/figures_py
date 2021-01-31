@@ -30,7 +30,7 @@ def main():
     # scores: Scores = Scores(csv_reader)
     google_sheet_reader: GoogleSheetsReader = GoogleSheetsReader()
     scores: Scores = Scores(google_sheet_reader)
-    game: GameLevel = GameLevel()
+    game: GameLevel = GameLevel(current_user=current_user)
     while game.update_field():
         pass
 

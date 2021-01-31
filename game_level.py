@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class GameLevel:
-    def __init__(self):
+    def __init__(self, current_user: str):
         # init pygame parameters
         pygame.init()
         self.screen: pygame.Surface = pygame.display.set_mode(
@@ -63,6 +63,8 @@ class GameLevel:
         self.figure_just_rotated: bool = False  # flag for force redrawing the field during success rotation attempt
         self.need_to_quit: bool = False
         self.start_screen_active: bool = True
+
+        self.current_user = current_user
 
     # returns False if it's possible to stop updating
     def update_field(self) -> bool:
@@ -257,6 +259,14 @@ class GameLevel:
             label_text=f'Скорость: {self.speed_level}',
             font=self.speed_label_font,
             label_position=(470, 50),
+            update_display=False,
+        )
+
+        # draw current user
+        self.__draw_custom_label(
+            label_text=self.current_user,
+            font=self.speed_label_font,
+            label_position=(470, 80),
             update_display=False,
         )
 
